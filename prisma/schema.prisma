@@ -1,0 +1,235 @@
+generator client {
+  provider = "go run github.com/steebchen/prisma-client-go"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = mysql://root:root@localhost:3306/pertanahan
+}
+
+model artikel {
+  id_artikel String   @id @db.VarChar(20)
+  judul      String   @db.VarChar(120)
+  isi        String   @db.LongText
+  timestamp  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model buku_tanah {
+  id_buku_tanah       String                     @id @db.VarChar(20)
+  id_kecamatan        String                     @db.VarChar(20)
+  id_kelurahan        String                     @db.VarChar(20)
+  id_tipe_su          String                     @db.VarChar(20)
+  id_tipe_hak         String                     @db.VarChar(20)
+  nomor_hak_milik     String                     @db.VarChar(40)
+  nomor_su            String                     @db.VarChar(40)
+  tahun               Int
+  nomor_bundle        String                     @db.VarChar(40)
+  created_at          DateTime                   @default(now()) @db.Timestamp(0)
+  updated_at          DateTime                   @default(now()) @db.Timestamp(0)
+  pinjamBukuTanah     buku_tanah_pinjamBukuTanah @default(off_pinjam)
+  pinjamSuratUkur     buku_tanah_pinjamSuratUkur @default(off_pinjam)
+  kelurahan           kelurahan                  @relation(fields: [id_kelurahan], references: [id_kelurahan], onDelete: Cascade, map: "buku_tanah_ibfk_1")
+  kecamatan           kecamatan                  @relation(fields: [id_kecamatan], references: [id_kecamatan], onDelete: Cascade, map: "buku_tanah_ibfk_2")
+  tipe_hak            tipe_hak                   @relation(fields: [id_tipe_hak], references: [id_tipe_hak], onDelete: Cascade, map: "buku_tanah_ibfk_3")
+  tipe_su             tipe_su                    @relation(fields: [id_tipe_su], references: [id_tipe_su], onDelete: Cascade, map: "buku_tanah_ibfk_4")
+  pinjaman_buku_tanah pinjaman_buku_tanah[]
+
+  @@index([id_buku_tanah], map: "id_buku_tanah")
+  @@index([id_kecamatan], map: "id_kecamatan")
+  @@index([id_kelurahan], map: "id_kelurahan")
+  @@index([id_tipe_hak], map: "id_tipe_hak")
+  @@index([id_tipe_su], map: "id_tipe_su")
+}
+
+model galeri {
+  id_galeri        String   @id @db.VarChar(20)
+  keterangan       String   @db.VarChar(250)
+  tanggal_kegiatan String   @db.VarChar(20)
+  timestmap        DateTime @default(now()) @db.Timestamp(0)
+}
+
+model jabatan {
+  id_jabatan String   @id @db.VarChar(20)
+  jabatan    String   @db.VarChar(50)
+  timestamp  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model kecamatan {
+  id_kecamatan String       @id @db.VarChar(20)
+  kecamatan    String       @db.VarChar(50)
+  timestamp    DateTime     @default(now()) @db.Timestamp(0)
+  buku_tanah   buku_tanah[]
+  kelurahan    kelurahan[]
+}
+
+model kegiatan {
+  id_kegiatan String   @id @db.VarChar(20)
+  kegiatan    String   @db.VarChar(150)
+  timestamp   DateTime @default(now()) @db.Timestamp(0)
+  warkah      warkah[]
+}
+
+model kelurahan {
+  id_kelurahan   String       @id @db.VarChar(20)
+  id_kecamatan   String       @db.VarChar(20)
+  kode_kelurahan String       @db.VarChar(20)
+  kelurahan      String       @db.VarChar(50)
+  timestamp      DateTime     @default(now()) @db.Timestamp(0)
+  buku_tanah     buku_tanah[]
+  kecamatan      kecamatan    @relation(fields: [id_kecamatan], references: [id_kecamatan], onDelete: Cascade, map: "kelurahan_ibfk_1")
+
+  @@index([id_kecamatan], map: "id_kecamatan")
+}
+
+model login {
+  id_login Int    @id
+  nama     String @db.VarChar(50)
+  username String @db.VarChar(40)
+  password String @db.VarChar(200)
+}
+
+model pegawai {
+  id_pegawai          String                @id @db.VarChar(20)
+  id_status           String                @db.VarChar(20)
+  id_sub_bagian       String                @db.VarChar(20)
+  nip                 String                @db.VarChar(30)
+  nama                String                @db.VarChar(100)
+  no_handphone        String                @db.VarChar(15)
+  jabatan             String                @db.VarChar(100)
+  timestamp           DateTime              @default(now()) @db.Timestamp(0)
+  sub_bagian          sub_bagian            @relation(fields: [id_sub_bagian], references: [id_sub_bagian], onDelete: Cascade, map: "pegawai_ibfk_1")
+  status              status                @relation(fields: [id_status], references: [id_status], onDelete: Cascade, map: "pegawai_ibfk_2")
+  pinjam_wakah        pinjam_wakah[]
+  pinjaman_buku_tanah pinjaman_buku_tanah[]
+
+  @@index([id_sub_bagian], map: "id_golongan")
+  @@index([id_status], map: "id_status")
+}
+
+model pinjam_wakah {
+  id_pinjam_warkah    String   @id @db.VarChar(20)
+  id_warkah           String   @db.VarChar(20)
+  id_pegawai          String   @db.VarChar(20)
+  tanggal_start       String   @db.VarChar(20)
+  tanggal_end         String   @db.VarChar(20)
+  tujuan_peminjaman   String   @db.VarChar(200)
+  status_pengembalian String   @db.VarChar(30)
+  isKembali           Int      @default(0)
+  timestamp           DateTime @default(now()) @db.Timestamp(0)
+  keterangan          String?  @default("") @db.VarChar(150)
+  tanggal_kembali     String?  @db.VarChar(50)
+  warkah              warkah   @relation(fields: [id_warkah], references: [id_warkah], onDelete: Cascade, onUpdate: NoAction, map: "pinjam_wakah_ibfk_1")
+  pegawai             pegawai  @relation(fields: [id_pegawai], references: [id_pegawai], onDelete: Cascade, onUpdate: NoAction, map: "pinjam_wakah_ibfk_2")
+
+  @@index([id_pegawai], map: "id_pegawai")
+  @@index([id_pinjam_warkah], map: "id_pinjam_warkah")
+  @@index([id_warkah], map: "id_warkah_2")
+}
+
+model pinjaman_buku_tanah {
+  id_pinjaman_buku_tanah String     @id @db.VarChar(20)
+  tanggal_start          String     @db.VarChar(20)
+  tanggal_end            String     @db.VarChar(20)
+  id_pegawai             String     @db.VarChar(20)
+  id_buku_tanah          String     @db.VarChar(20)
+  tujuan                 String     @db.VarChar(250)
+  isKembali              Int        @default(0)
+  keterangan             String?    @db.VarChar(100)
+  meminjam               String     @db.VarChar(50)
+  tanggal_pengembalian   String?    @db.VarChar(50)
+  status_pengembalian    String     @db.VarChar(50)
+  timestamp              DateTime   @default(now()) @db.Timestamp(0)
+  dikembalikan_oleh      String     @db.VarChar(20)
+  tanggal_dikembalikkan  String     @default("-") @db.VarChar(30)
+  buku_tanah             buku_tanah @relation(fields: [id_buku_tanah], references: [id_buku_tanah], onDelete: Cascade, map: "pinjaman_buku_tanah_ibfk_1")
+  pegawai                pegawai    @relation(fields: [id_pegawai], references: [id_pegawai], onDelete: Cascade, map: "pinjaman_buku_tanah_ibfk_2")
+
+  @@index([dikembalikan_oleh], map: "dikembalikan_oleh")
+  @@index([id_buku_tanah], map: "id_buku_tanah")
+  @@index([id_pegawai], map: "id_pegawai")
+}
+
+model slide_show {
+  id_slide_show String   @id @db.VarChar(20)
+  judul         String   @db.VarChar(50)
+  keterangan    String   @db.VarChar(250)
+  timestmap     DateTime @default(now()) @db.Timestamp(0)
+}
+
+model status {
+  id_status  String    @id @db.VarChar(20)
+  status     String    @db.VarChar(50)
+  created_at DateTime  @default(now()) @db.Timestamp(0)
+  updated_at DateTime  @default(now()) @db.Timestamp(0)
+  pegawai    pegawai[]
+}
+
+model sub_bagian {
+  id_sub_bagian String    @id @db.VarChar(20)
+  sub_bagian    String    @db.VarChar(100)
+  created_at    DateTime  @default(now()) @db.Timestamp(0)
+  updated_at    DateTime  @default(now()) @db.Timestamp(0)
+  pegawai       pegawai[]
+}
+
+model tipe_hak {
+  id_tipe_hak String       @id @db.VarChar(20)
+  tipe_hak    String       @db.VarChar(100)
+  created_at  DateTime     @default(now()) @db.Timestamp(0)
+  updated_at  DateTime     @default(now()) @db.Timestamp(0)
+  buku_tanah  buku_tanah[]
+}
+
+model tipe_su {
+  id_tipe_su String       @id @db.VarChar(20)
+  tipe_su    String       @db.VarChar(100)
+  created_at DateTime     @default(now()) @db.Timestamp(0)
+  updated_at DateTime     @default(now()) @db.Timestamp(0)
+  buku_tanah buku_tanah[]
+}
+
+model tujuan {
+  id_tujuan  String   @id @db.VarChar(20)
+  tujuan     String   @db.VarChar(200)
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+}
+
+model video {
+  id_video   String   @id @db.VarChar(20)
+  id_youtube String   @db.VarChar(20)
+  judul      String   @db.VarChar(100)
+  timestamp  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model warkah {
+  id_warkah    String          @id @db.VarChar(20)
+  id_kegiatan  String          @db.VarChar(200)
+  no_warkah    String          @db.VarChar(10)
+  tahun        String          @db.VarChar(4)
+  nomor_bundel Int
+  timestamp    DateTime        @default(now()) @db.Timestamp(0)
+  isPinjam     warkah_isPinjam @default(off_pinjam)
+  pinjam_wakah pinjam_wakah[]
+  kegiatan     kegiatan        @relation(fields: [id_kegiatan], references: [id_kegiatan], onDelete: Cascade, map: "warkah_ibfk_1")
+
+  @@index([id_kegiatan], map: "id_kegiatan")
+}
+
+enum warkah_isPinjam {
+  on_pinjam
+  off_pinjam
+  hilang
+}
+
+enum buku_tanah_pinjamBukuTanah {
+  on_pinjam
+  off_pinjam
+  hilang
+}
+
+enum buku_tanah_pinjamSuratUkur {
+  on_pinjam
+  off_pinjam
+  hilang
+}
